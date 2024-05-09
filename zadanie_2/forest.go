@@ -9,6 +9,7 @@ type FieldType uint8
 const (
 	Empty FieldType = iota
 	Tree
+	OldTree
 	BurningTree
 	BurnedTree
 	Lightning
@@ -16,6 +17,7 @@ const (
 
 type Forest struct {
 	plane [][]FieldType
+	initialTrees int
 }
 func (forest *Forest) DrawForest() {
 	for _, row := range forest.plane {
@@ -24,11 +26,13 @@ func (forest *Forest) DrawForest() {
 			case Empty:
 				fmt.Print(" ")
 			case Tree:
-				fmt.Print("𖠰")
+				fmt.Print("T")
 			case BurningTree:
 				fmt.Print("🔥")
 			case BurnedTree:
 				fmt.Print("↟")
+			case OldTree:
+				fmt.Print("𖠰")
 			case Lightning:
 				fmt.Print("⚡")
 			}
@@ -36,9 +40,40 @@ func (forest *Forest) DrawForest() {
 		fmt.Println()
 	}
 }
-func NewForest(sizeX, sizeY int) *Forest {
+
+
+func (forest *Forest) GetBurntCount() int {
+	burnt := 0
+	for i := 0; i < len(forest.plane); i++ {
+		for j := 0; j < len(forest.plane[i]); j++ {
+			if forest.plane[i][j] == BurnedTree {
+				burnt++
+			}
+		}
+	}
+	return burnt
+}
+
+func (forest *Forest) GetInitialTreeCount() int {
+	trees := 0
+	for i := 0; i < len(forest.plane); i++ {
+		for j := 0; j < len(forest.plane[i]); j++ {
+			if forest.plane[i][j] == Tree {
+				trees++
+			}
+		}
+	}
+	return trees
+}
+
+func (forest *Forest) GetForestSize() int {
+	return len(forest.plane) * len(forest.plane[0])
+}
+
+func NewForest(sizeX, sizeY, initialTrees int) *Forest {
 	forest := &Forest{
 		plane: make([][]FieldType, sizeY),
+		initialTrees: initialTrees,
 	}
 	for i := range forest.plane {
 		forest.plane[i] = make([]FieldType, sizeX)
@@ -55,10 +90,18 @@ func (forest *Forest) SetBurnedTree(x, y int) {
 	forest.plane[x][y] = BurnedTree
 }
 func (forest *Forest) RandomTrees() {
-	for i := 0; i < len(forest.plane); i++ {
-		for j := 0; j < len(forest.plane[i]); j++ {
-			if rand.Intn(100) < 30{
-				forest.SetTree(i, j)
+	count := 0
+	for count < forest.initialTrees {
+		for i := 0; i < len(forest.plane); i++ {
+			for j := 0; j < len(forest.plane[i]); j++ {
+				if rand.Intn(100) < 10 && count < forest.initialTrees{
+					forest.SetTree(i, j)
+					count++
+				}
+				if rand.Intn(100) < 1 && count < forest.initialTrees{
+					forest.SetOldTree(i, j)
+					count++
+				}
 			}
 		}
 	}
@@ -67,10 +110,17 @@ func (forest *Forest) SetLightning(x, y int) {
 	forest.plane[x][y] = Lightning
 }
 
+func (forest *Forest) SetOldTree(x, y int) {
+	forest.plane[x][y] = OldTree
+}
+
 func (forest *Forest) RandomLightning(){
 	x := rand.Intn(len(forest.plane))
 	y := rand.Intn(len(forest.plane[0]))
-	if forest.plane[x][y] == Tree {
+	if forest.plane[x][y] == OldTree {
+		forest.SetLightning(x, y)
+	}
+	if forest.plane[x][y] == Tree && rand.Intn(100) < 1 {
 		forest.SetLightning(x, y)
 	}
 }
@@ -84,12 +134,16 @@ func (forest *Forest) Update() {
 				forest.SetBurnedTree(i, j)
 				neighbors := forest.GetNeighbors(i, j)
 				for _, neighbor := range neighbors {
-					if forest.plane[neighbor[0]][neighbor[1]] == Tree {
+					if forest.plane[neighbor[0]][neighbor[1]] == OldTree {
 						burningTrees = append(burningTrees, [2]int{neighbor[0], neighbor[1]})
 					}
 				}
 			case Lightning:
 				forest.SetBurningTree(i, j)
+			case Tree:
+				if rand.Intn(100) < 10 {
+					forest.SetOldTree(i, j)
+				}
 			}
 		}
 	}
