@@ -30,7 +30,7 @@ var (
 func main() {
 	var jsonSharkAttacks []SharkAttack
 	postsToLoad := 10
-	byteValue, err := os.ReadFile("C:\\Users\\michalpc\\Desktop\\Studia\\ug-golang\\zadanie_3\\global-shark-attack.json")
+	byteValue, err := os.ReadFile("/home/LABPK/mpomirski/mpomirski/4 semestr/golang/zadanie_3/global-shark-attack.json")
 	if err != nil {
 		println("Error reading file")
 		return
@@ -70,6 +70,11 @@ func attackHandler(w http.ResponseWriter, r *http.Request) {
 			handleGetAttack(w, r, id)
 		case http.MethodDelete:
 			handleDeleteAttack(w, r, id)
+		case "OPTIONS":
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			w.Header().Set("Access-Control-Allow-Methods", "*")
+			w.Header().Set("Access-Control-Allow-Headers", "*")
+			w.WriteHeader(http.StatusOK)
 		default:
 			http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 	}
@@ -81,6 +86,11 @@ func attacksHandler(w http.ResponseWriter, r *http.Request) {
 				handleGetAttacks(w, r)
 		case http.MethodPost:
 			handlePostAttack(w, r)
+		case "OPTIONS":
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			w.Header().Set("Access-Control-Allow-Methods", "*")
+			w.Header().Set("Access-Control-Allow-Headers", "*")
+			w.WriteHeader(http.StatusOK)
 		default:
 			http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 	}
@@ -91,6 +101,9 @@ func handleGetAttacks(w http.ResponseWriter, r *http.Request) {
 	defer sharkAttacksMutex.Unlock()
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
 	json.NewEncoder(w).Encode(sharkAttacks)
 }
 
@@ -105,6 +118,9 @@ func handleGetAttack(w http.ResponseWriter, r *http.Request, id int) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
 	json.NewEncoder(w).Encode(sharkAttacks[id])
 }
 
@@ -123,6 +139,9 @@ func handlePostAttack(w http.ResponseWriter, r *http.Request) {
 	nextID++
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(sharkAttack)
 }
@@ -138,5 +157,9 @@ func handleDeleteAttack(w http.ResponseWriter, r *http.Request, id int) {
 	}
 
 	delete(sharkAttacks, id)
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
 	w.WriteHeader(http.StatusOK)
+	
 }
